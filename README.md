@@ -29,7 +29,8 @@ Tech Stack
 
 Все настройки в данном проекте задаются через переменные окружения (".env" файл). Образец данного файла лежит в корне проекта.
 
-Порядок запуска проекта:
+Проект обернут в контейнер и в совокупности с Makefile - это позволяет быстро его поднять и запустить.
+Порядок запуска проекта следующий:
 
 1. Запуск PostgreSQL через (make up)
 2. Применение миграций через (make migrate-up)
@@ -38,7 +39,7 @@ Tech Stack
 5. Swagger UI доступен по адресу: http://localhost:8080/swagger/index.html
 6. Генерация документации (make swagger)
 
-Небольше API Overview для наглядности:
+Небольшое API Overview для наглядности:
 
 - Create subscription (POST /api/v1/subscriptions)
 - Get subscription by ID (GET /api/v1/subscriptions/{id})
