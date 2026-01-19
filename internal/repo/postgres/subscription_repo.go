@@ -23,7 +23,6 @@ func NewSubscriptionRepo(db *sqlx.DB) *SubscriptionRepo {
 
 var _ service.SubscriptionRepository = (*SubscriptionRepo)(nil)
 
-// Create inserts subscription and returns new ID.
 func (r *SubscriptionRepo) Create(ctx context.Context, s domain.Subscription) (int64, error) {
 	var id int64
 	err := r.db.QueryRowxContext(ctx, `
@@ -53,7 +52,6 @@ func (r *SubscriptionRepo) GetByID(ctx context.Context, id int64) (*domain.Subsc
 	return &s, nil
 }
 
-// Update updates and returns the updated entity (re-read).
 func (r *SubscriptionRepo) Update(ctx context.Context, s domain.Subscription) (*domain.Subscription, error) {
 	_, err := r.db.ExecContext(ctx, `
 		UPDATE subscriptions
@@ -102,20 +100,15 @@ func (r *SubscriptionRepo) List(ctx context.Context, f domain.ListFilter) ([]dom
 	return items, nil
 }
 
-// TotalCost counts total monthly price for each month in [From..To] inclusive by month.
 func (r *SubscriptionRepo) TotalCost(ctx context.Context, f domain.TotalFilter) (int64, error) {
 	if err := f.Validate(); err != nil {
 		return 0, err
 	}
 
-	// Convert inclusive "To" into exclusive upper bound
 	toExclusive := f.ToExclusive()
 
-	// optional filters for subscriptions alias "s"
 	where, args := buildWhereBase(f.UserID, f.ServiceName, "s")
 
-	// months series: from .. (toExclusive - 1 month)
-	// Example: From=07-2025, To=10-2025 => toExclusive=11-2025 => series ends at 10-2025
 	args = append(args, f.From, time.Date(toExclusive.Year(), toExclusive.Month()-1, 1, 0, 0, 0, 0, time.UTC))
 
 	query := fmt.Sprintf(`
@@ -137,9 +130,6 @@ func (r *SubscriptionRepo) TotalCost(ctx context.Context, f domain.TotalFilter) 
 	return total, nil
 }
 
-// ===== where builders =====
-
-// Base filters (user_id, service_name). alias is "" or "s".
 func buildWhereBase(userID, serviceName *string, alias string) (string, []any) {
 	clauses := make([]string, 0, 2)
 	args := make([]any, 0, 2)
@@ -164,7 +154,6 @@ func buildWhereBase(userID, serviceName *string, alias string) (string, []any) {
 	return "WHERE " + strings.Join(clauses, " AND "), args
 }
 
-// List-specific where includes period intersection with inclusive To by month.
 func buildWhereList(f domain.ListFilter) (string, []any) {
 	clauses := make([]string, 0, 4)
 	args := make([]any, 0, 4)
@@ -178,11 +167,6 @@ func buildWhereList(f domain.ListFilter) (string, []any) {
 		clauses = append(clauses, fmt.Sprintf("service_name = $%d", len(args)))
 	}
 
-	// Period intersection:
-	// subscription intersects [From, ToExclusive)
-	// Condition:
-	//   (end_date IS NULL OR end_date >= From)
-	//   AND start_date < ToExclusive
 	if f.From != nil {
 		from := domain.MonthStartUTC(*f.From)
 		args = append(args, from)

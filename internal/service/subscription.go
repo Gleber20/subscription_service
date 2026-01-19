@@ -22,8 +22,6 @@ func NewSubscriptionService(repo SubscriptionRepository) *SubscriptionService {
 	return &SubscriptionService{repo: repo}
 }
 
-// ===== DTO для service слоя (их использует http) =====
-
 type CreateSubscriptionRequest struct {
 	ServiceName string
 	Price       int64
@@ -57,8 +55,6 @@ type UpdateSubscriptionRequest struct {
 	StartDate   *string
 	EndDate     EndDateUpdate
 }
-
-// ===== Public methods for http layer =====
 
 func (s *SubscriptionService) Create(ctx context.Context, req CreateSubscriptionRequest) (int64, error) {
 	if req.ServiceName == "" || req.UserID == "" || req.Price < 0 || req.StartDate == "" {
@@ -173,10 +169,8 @@ func (s *SubscriptionService) TotalCost(ctx context.Context, f domain.TotalFilte
 	return s.repo.TotalCost(ctx, f)
 }
 
-// ===== helpers =====
-
 func parseMonthYear(v string) (time.Time, error) {
-	// формат "MM-YYYY" из ТЗ
+	// формат "MM-YYYY"
 	t, err := time.Parse("01-2006", v)
 	if err != nil {
 		return time.Time{}, err

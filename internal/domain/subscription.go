@@ -7,7 +7,6 @@ import (
 
 const MonthYearLayout = "01-2006" // MM-YYYY
 
-// ParseMonthYear parses "MM-YYYY" and returns the first day of that month in UTC.
 func ParseMonthYear(s string) (time.Time, error) {
 	t, err := time.Parse(MonthYearLayout, s)
 	if err != nil {
@@ -16,12 +15,10 @@ func ParseMonthYear(s string) (time.Time, error) {
 	return MonthStartUTC(t), nil
 }
 
-// MonthStartUTC normalizes any date to the first day of its month at 00:00:00 UTC.
 func MonthStartUTC(t time.Time) time.Time {
 	return time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, time.UTC)
 }
 
-// NextMonthStartUTC returns the first day of the next month at 00:00:00 UTC.
 func NextMonthStartUTC(t time.Time) time.Time {
 	t = MonthStartUTC(t)
 	return time.Date(t.Year(), t.Month()+1, 1, 0, 0, 0, 0, time.UTC)

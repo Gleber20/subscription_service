@@ -5,9 +5,6 @@ import (
 	"time"
 )
 
-// ListFilter is used for listing subscriptions.
-// From/To are month starts (UTC). If both are set, period is interpreted as:
-// [From, NextMonthStart(To))  (i.e. To is inclusive by month)
 type ListFilter struct {
 	UserID      *string
 	ServiceName *string
@@ -19,9 +16,6 @@ type ListFilter struct {
 	Offset int
 }
 
-// TotalFilter is used for aggregation.
-// From/To are REQUIRED month starts (UTC). To is inclusive by month.
-// Internally, you should convert To to ToExclusive = NextMonthStartUTC(To).
 type TotalFilter struct {
 	UserID      *string
 	ServiceName *string
@@ -30,7 +24,6 @@ type TotalFilter struct {
 	To   time.Time // month start (UTC), inclusive by month
 }
 
-// Validate checks obvious mistakes early (service layer can call this).
 func (f TotalFilter) Validate() error {
 	from := MonthStartUTC(f.From)
 	to := MonthStartUTC(f.To)
