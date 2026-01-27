@@ -69,9 +69,18 @@ func (r *SubscriptionRepo) Update(ctx context.Context, s domain.Subscription) (*
 	return r.GetByID(ctx, s.ID)
 }
 
-func (r *SubscriptionRepo) Delete(ctx context.Context, id int64) error {
-	_, err := r.db.ExecContext(ctx, `DELETE FROM subscriptions WHERE id = $1`, id)
-	return err
+func (r *SubscriptionRepo) Delete(ctx context.Context, id int64) (bool, error) {
+	res, err := r.db.ExecContext(ctx, `DELETE FROM subscriptions WHERE id = $1`, id)
+	if err != nil {
+		return false, err
+	}
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+
+	return affected > 0, nil
 }
 
 func (r *SubscriptionRepo) List(ctx context.Context, f domain.ListFilter) ([]domain.Subscription, error) {

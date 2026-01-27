@@ -6,14 +6,18 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
 	_ "subscription_service/docs"
 	"subscription_service/internal/config"
 	"subscription_service/internal/database"
-	"subscription_service/internal/http"
+	httpapi "subscription_service/internal/http"
 	"subscription_service/internal/repo/postgres"
 	"subscription_service/internal/service"
+	"syscall"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/sethvargo/go-envconfig"
@@ -38,13 +42,39 @@ func main() {
 
 	repo := postgres.NewSubscriptionRepo(db)
 	svc := service.NewSubscriptionService(repo)
-	h := http.NewHandler(svc)
+	h := httpapi.NewHandler(svc)
 
-	r := http.NewRouter(h)
+	router := httpapi.NewRouter(h)
 
 	addr := ":" + cfg.HTTPPort
-	fmt.Println("subscription_service running on", addr)
-	if err := r.Run(addr); err != nil {
-		log.Fatalf("server error: %v", err)
+
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: router,
 	}
+
+	// Запуск сервера в отдельной горутине для graceful shutdown
+	go func() {
+		log.Printf("subscription_service running on %s", addr)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("server error: %v", err)
+		}
+	}()
+
+	// Ожидаем сигнал завершения через буферизированный канал
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+
+	<-stop
+	log.Println("shutdown signal received...")
+
+	// Даём активным запросам завершиться и мягко закрываем наше приложение
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("graceful shutdown failed: %v", err)
+	}
+
+	log.Println("server stopped gracefully")
 }

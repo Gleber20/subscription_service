@@ -1,33 +1,51 @@
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_DATABASE=subscriptions_db
+DC := docker compose
 
-DB_URL=postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DATABASE)?sslmode=disable
+DB_USER := postgres
+DB_PASS := Simuve39
+DB_HOST := db
+DB_PORT := 5432
+DB_NAME := subscriptions_db
+DB_URL  := postgres://$(DB_USER):$(DB_PASS)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable
 
-.PHONY: up down run migrate-up migrate-down migrate-reset migrate-create
+.PHONY: up down logs ps rebuild \
+        migrate-up migrate-down migrate-reset migrate-version \
+        db-psql db-tables
 
 up:
-	docker compose up -d
+	$(DC) up -d --build
 
 down:
-	docker compose down
+	$(DC) down
 
-run:
-	go run ./cmd/api
+rebuild:
+	$(DC) up -d --build --force-recreate
 
+logs:
+	$(DC) logs -f --tail=200
+
+ps:
+	$(DC) ps
+
+# --- Migrations (always inside docker network) ---
 migrate-up:
-	migrate -path ./migrations -database "$(DB_URL)" up
+	$(DC) run --rm migrate up
 
 migrate-down:
-	migrate -path ./migrations -database "$(DB_URL)" down 1
+	$(DC) run --rm migrate down 1
 
 migrate-reset:
-	migrate -path ./migrations -database "$(DB_URL)" down -all
+	$(DC) run --rm migrate down -all
+	$(DC) run --rm migrate up
 
-migrate-create:
-	migrate create -ext sql -dir ./migrations -seq -digits 4 $(name)
+migrate-version:
+	$(DC) run --rm migrate version
+
+# --- DB helpers ---
+db-psql:
+	$(DC) exec db psql -U $(DB_USER) -d $(DB_NAME)
+
+db-tables:
+	$(DC) exec db psql -U $(DB_USER) -d $(DB_NAME) -c "\dt"
 
 swagger:
 	swag init -g cmd/api/main.go -o docs

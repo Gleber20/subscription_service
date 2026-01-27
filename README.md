@@ -37,7 +37,7 @@ Tech Stack
 3. Запуск приложения (make run)
 4. REST API доступен по адресу: http://localhost:8080
 5. Swagger UI доступен по адресу: http://localhost:8080/swagger/index.html
-6. Генерация документации (make swagger)
+6. По умолчанию сваггер документация скрыта. Для её локальной генерации используется команда "make swagger"
 
 Небольшое API Overview для наглядности:
 
