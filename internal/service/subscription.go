@@ -154,10 +154,14 @@ func (s *SubscriptionService) Update(ctx context.Context, id int64, req UpdateSu
 }
 
 func (s *SubscriptionService) Delete(ctx context.Context, id int64) error {
-	if id <= 0 {
-		return fmt.Errorf("%w: invalid id", ErrInvalidInput)
+	deleted, err := s.repo.Delete(ctx, id)
+	if err != nil {
+		return err
 	}
-	return s.repo.Delete(ctx, id)
+	if !deleted {
+		return ErrNotFound
+	}
+	return nil
 }
 
 func (s *SubscriptionService) List(ctx context.Context, f domain.ListFilter) ([]domain.Subscription, error) {
