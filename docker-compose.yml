@@ -3,7 +3,7 @@ services:
     image: postgres:16
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Simuve39
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: subscriptions_db
     ports:
       - "5432:5432"
