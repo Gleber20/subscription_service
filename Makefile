@@ -1,7 +1,7 @@
 DC := docker compose
 
 DB_USER := postgres
-DB_PASS := Simuve39
+DB_PASS := postgres
 DB_HOST := db
 DB_PORT := 5432
 DB_NAME := subscriptions_db
